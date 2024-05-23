@@ -11,20 +11,21 @@ const { readFile, writeFile } = require("./utility");
 
 //creazione del server
 const server = http.createServer((req, res) => {
+  //array jokes
   const jokes = readFile("norrisDb.json");
 
-  switch (req.url) {
-    //HOME
-    case "/":
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+  //funzione fetch jokes che richiama se stessa se trova duplicato
+  function fetchJokes() {
+    fetch("https://api.chucknorris.io/jokes/random")
+      .then((response) => response.json())
+      .then((data) => {
+        if (jokes.includes(data.value)) {
+          fetchJokes();
+        }
+        const updatedJokes = [...jokes, data.value];
+        writeFile("norrisDb.json", updatedJokes);
 
-      fetch("https://api.chucknorris.io/jokes/random")
-        .then((response) => response.json())
-        .then((data) => {
-          const updatedJokes = [...jokes, data.value];
-          writeFile("norrisDb.json", updatedJokes);
-
-          let html = `
+        let html = `
           <!DOCTYPE html>
           <html lang="en">
           <head>
@@ -43,18 +44,26 @@ const server = http.createServer((req, res) => {
             <ol>
         `;
 
-          updatedJokes.forEach((joke) => {
-            html += `<li>${joke}</li>`;
-          });
+        updatedJokes.forEach((joke) => {
+          html += `<li>${joke}</li>`;
+        });
 
-          html += `
+        html += `
             </ol>
           </body>
           </html>
         `;
 
-          res.end(html);
-        });
+        res.end(html);
+      });
+  }
+
+  switch (req.url) {
+    //HOME
+    case "/":
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+
+      fetchJokes();
 
       break;
 
