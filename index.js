@@ -6,9 +6,14 @@ const port = process.env.PORT || 8080;
 const host = process.env.HOST || "localhost";
 
 const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader("Content-Type", "text/html", "utf-8");
-  res.end("Hello World");
+  fetch("https://api.chucknorris.io/jokes/random")
+    .then((response) => response.json())
+    .then((resp) => {
+      let data;
+      data = resp.value;
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(JSON.stringify(data));
+    });
 });
 
 server.listen(port, host, () => {
